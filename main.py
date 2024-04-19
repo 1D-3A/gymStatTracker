@@ -1,10 +1,8 @@
 import sqlite3
-import os
 import datetime
 import turtle
 
 conn = sqlite3.connect('workouts.db')
-conn = sqlite3.connect('goals.db')
 c = conn.cursor()
 
 c.execute('''CREATE TABLE IF NOT EXISTS prs (
@@ -89,6 +87,9 @@ def graphThings():
     c.execute('''SELECT DISTINCT exercise FROM prs''')
     exercises = c.fetchall()
     print("Available exercises:")
+    if not exercises:
+      print("Error: No exercises available.")
+      return()
     for exercise in exercises:
       print(exercise[0])
     choice = str(input("Please select an exercise: "))
@@ -133,6 +134,9 @@ def graphThings():
       if choice in ["1","2"]:
         break
       print("Invalid choice")
+  if len(test) < 2:
+    print("There are less than 2 exercises for this type, so it could not be graphed.")
+    return()
   choice = int(choice)
   thingstograph = []
   for i in test:
@@ -153,28 +157,34 @@ def graphThings():
   subtract = min(thingstograph)
   turtle.goto(turtle.window_width()/-2,(test[0][choice]-subtract) * multiply2 - 150)
   turtle.down()
+  print("\nGraphing...")
   for i in test:
     date1 = datetime.datetime.strptime(i[3], "%Y-%m-%d").date()
     turtle.goto((((date1 - date2).total_seconds()//86400)) * multiply - 225, (i[choice] - subtract) * multiply2 - 150)
+  print("\nGraph dimensions:")
+  print(f"\tX:{date2} to {date1}")
+  print(f"\tY:{min(thingstograph) - (max(thingstograph) - min(thingstograph) / 12)} to {max(thingstograph) + (max(thingstograph) - min(thingstograph) / 12)}")
 
 def clearData():
-  choice = int(input("\n\tWhich database would you like to remove? (1 - workouts.db, 2 - goals.db): "))
-  if choice == 1:
-    confirm = input("\n\tAre you sure?: ")
-    if confirm.lower() == 'y':
-      os.remove('workouts.db')
-      print("\n\tRemoving database...")
-      exit()
-    else:
-      exit()
-  if choice == 2:
-    confirm = input("\n\tAre you sure?: ")
-    if confirm.lower() == 'y':
-      os.remove('goals.db')
-      print("\n\tRemoving database...")
-      exit()
-    else:
-      exit()
+  while True:
+    choice = input("\n\tWhich database would you like to remove? (1 - workouts, 2 - goals): ")
+    if choice == "1" or choice.lower() == "workouts":
+      confirm = input("\n\tAre you sure?: ")
+      if confirm.lower() == 'y':
+        conn.execute("DROP TABLE prs") 
+        print("\n\tRemoving database...")
+        exit()
+      else:
+        break
+    if choice == "2" or choice.lower() == "goals":
+      confirm = input("\n\tAre you sure?: ")
+      if confirm.lower() == 'y':
+        conn.execute("DROP TABLE goals") 
+        print("\n\tRemoving database...")
+        exit()
+      else:
+        break
+    print("That's not one of the options!")
 
 def enterDate():
   while True:
